@@ -132,9 +132,35 @@ jobs:
             npm audit fix --audit-level=critical --force
       - slack/status
 
-#  deploy-infrastructure:
+  create-frontend-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create frontend infrastructure
+          command: |
+            aws cloudformation deploy \
+              --stack-name udapeople \
+              --template-file .circleci/files/frontend.yml \
+              --region us-east-2 \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
 
-#  configure-infrastructure:
+  create-backend-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create backend infrastructure
+          command: |
+            aws cloudformation deploy \
+              --stack-name udapeople \
+              --template-file .circleci/files/backend.yml \
+              --region us-east-2 \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
+              
+#  deploy-infrastructure:
 
 #  run-migrations:
 
@@ -147,7 +173,7 @@ jobs:
 #  cloudfront-update:
 
 workflows:
-  default:
+  frontend:
     jobs:
       - hello
       - build-frontend:
@@ -159,10 +185,21 @@ workflows:
       - analyze-frontend:
           requires:
             - test-frontend
-      - build-backend
+      - create-frontend-infrastructure:
+          requires:
+            - analyze-frontend
+  backend:
+    jobs:
+      - hello
+      - build-backend:
+          requires:
+            - hello
       - test-backend:
           requires:
             - build-backend
       - analyze-backend:
           requires:
             - test-backend
+      - create-backend-infrastructure:
+          requires:
+            - analyze-backend
