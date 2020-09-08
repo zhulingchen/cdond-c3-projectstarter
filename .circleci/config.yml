@@ -75,6 +75,54 @@ jobs:
             cd frontend
             npm audit fix --audit-level=critical --force
 
+  build-backend:
+    docker:
+      - image: << pipeline.parameters.image >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: Compile the code
+          command: |
+            cd backend
+            npm run build
+
+  test-backend:
+    docker:
+      - image: << pipeline.parameters.image >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: Test the code
+          command: |
+            cd backend
+            npm run test
+
+  analyze-backend:
+    docker:
+      - image: << pipeline.parameters.image >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: Analyze the code
+          command: |
+            cd backend
+            npm audit fix --audit-level=critical --force
+
 #  deploy-infrastructure:
 
 #  configure-infrastructure:
@@ -102,3 +150,10 @@ workflows:
       - analyze-frontend:
           requires:
             - test-frontend
+      - build-backend
+      - test-backend:
+          requires:
+            - build-backend
+      - analyze-backend:
+          requires:
+            - test-backend
