@@ -1,0 +1,17 @@
+- name: Creates directory
+  become: true
+  file:
+    path: /etc/project
+    state: directory
+
+- name: Move backend files to server
+  become: true
+  copy:
+    src: /root/project/backend/dist
+    dest: /etc/project
+    mode: '0777'
+
+- name: Executing node
+  become: true
+  shell: |
+    pm2 start /etc/project/dist/main.js -f 
