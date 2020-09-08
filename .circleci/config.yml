@@ -11,18 +11,36 @@ version: 2.1
 #     description: Revert the last migration if successfully run in the current workflow.
 #     ...
 
+parameters:
+  image:
+    type: string
+    default: circleci/node:latest
+
 jobs:
-  hello-world: # Delete this job when you get started
+  hello:
     docker:
-      - image: amazon/aws-cli
+      - image: << pipeline.parameters.image >>
+    steps:
+      - run: echo "My pipeline id is << pipeline.id >> and my git branch is << pipeline.git.branch >>."
+      - checkout
+      - run: pwd
+      - run: ls -Rla ~
+      - run: node -v
+  build-frontend:
+    docker:
+      - image: << pipeline.parameters.image >>
     steps:
       - checkout
       - run:
-          name: Say Hello
+          name: Install dependencies
           command: |
-            echo "Hello World"
-
-#  build-frontend:
+            cd frontend
+            npm i
+      - run:
+          name: Compile the code
+          command: |
+            cd frontend
+            npm run build
 
 #  build-frontend:
 
@@ -51,4 +69,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - hello-world
+      - hello
+      - build-frontend:
+          requires:
+            - hello
