@@ -4,6 +4,9 @@
   user: ubuntu
  
   vars:
+    ansible_python_interpreter: /usr/bin/python3
+    host_key_checking: False
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
     # Get the environment variables from CircleCI and add to the instance
     TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
     TYPEORM_ENTITIES: "{{ lookup('env','TYPEORM_ENTITIES') }}"
@@ -16,7 +19,7 @@
     ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}"
     #API_URL: "{{ lookup('env','API_URL') }}"
 
-  gather_facts: true
+  gather_facts: false
 
   roles:
       - hello

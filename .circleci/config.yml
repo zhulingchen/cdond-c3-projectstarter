@@ -189,7 +189,7 @@ jobs:
             echo ${PUBLIC_DNS}
             cd .circleci/ansible/
             echo "[all]" > ./inventory
-            echo  "${PUBLIC_DNS} ansible_user=ubuntu" >> ./inventory
+            echo ${PUBLIC_DNS} >> ./inventory
             cat ./inventory
       - run:
           name: Configure server
