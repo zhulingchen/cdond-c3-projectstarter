@@ -17,7 +17,7 @@ parameters:
     default: circleci/node:latest
 
 orbs:
-  slack: circleci/slack@3.4.2  # for slack integration
+  slack: circleci/slack@3.4.2  # for slack integration to https://udapeople.slack.com; reference: https://circleci.com/blog/continuous-integration-slack-twilio/
 
 jobs:
   hello:
