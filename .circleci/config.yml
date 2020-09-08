@@ -177,11 +177,7 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      - checkout
-      - run:
-          name: Destroy and clear the frontend s3 stack
-          command: |
-            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID} --recursive     
+      - checkout    
       - run:
           name: Destroy and clear the backend stack resources
           command: |
