@@ -153,6 +153,15 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
+      - run:
+          name: Get and save public DNS of EC2 instance to https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --query "Reservations[*].Instances[0].Pub
+licDnsName"  --output text)
+            echo ${PUBLIC_DNS}
+            curl -H "Content-Type: text/plain" \
+              -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" \
+              --request PUT --data ${PUBLIC_DNS} https://api.memstash.io/values/public_dns
       - slack/status
               
 #  deploy-infrastructure:
