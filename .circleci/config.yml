@@ -73,7 +73,7 @@ jobs:
           name: Analyze the code
           command: |
             cd frontend
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
 
 #  deploy-infrastructure:
 
