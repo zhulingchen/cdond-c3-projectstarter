@@ -174,14 +174,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build the backend
-          command: |
-            cd backend
-            npm install
-            npm run build
-      - add_ssh_keys:
-          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
-      - run:
           name: Install system dependencies
           command: |
             apk add --no-cache curl
@@ -189,6 +181,14 @@ jobs:
             apk add --no-cache --update ansible
             apk add --no-cache openssh-client
             apk add --no-cache --update npm
+      - run:
+          name: Build the backend
+          command: |
+            cd backend
+            npm install
+            npm run build
+      - add_ssh_keys:
+          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
           name: Get the public DNS of EC2 instance from https://memstash.io/
           command: |
