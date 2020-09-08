@@ -1,9 +1,9 @@
 Description: >
-  UdaPeople frontend stack.
+  UdaPeople frontend stack
 
 Parameters:
   ID:
-    Description: Unique identifier.
+    Description: Unique identifier
     Type: String
 
 Resources:

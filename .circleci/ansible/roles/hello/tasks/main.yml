@@ -1,0 +1,4 @@
+- name: "install node exporter."
+  copy:
+    content: hello world
+    dest: /tmp/helloworld.txt
