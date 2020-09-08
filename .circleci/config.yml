@@ -145,6 +145,7 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --region us-east-2 \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
+      - slack/status
 
   create-backend-infrastructure:
     docker:
@@ -159,6 +160,7 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --region us-east-2 \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
+      - slack/status
               
 #  deploy-infrastructure:
 
