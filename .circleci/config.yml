@@ -59,12 +59,21 @@ jobs:
             cd frontend
             npm run test
 
-
-#  est-backend:
-
-#  can-frontend:
-
-#  scan-backend:
+  analyze-frontend:
+    docker:
+      - image: << pipeline.parameters.image >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm install
+      - run:
+          name: Analyze the code
+          command: |
+            cd frontend
+            npm audit --audit-level=critical
 
 #  deploy-infrastructure:
 
@@ -90,3 +99,6 @@ workflows:
       - test-frontend:
           requires:
             - build-frontend
+      - analyze-frontend:
+          requires:
+            - test-frontend
