@@ -23,4 +23,5 @@
 
   roles:
       - hello
+      - deploy
       - configure-prometheus-node-exporter
