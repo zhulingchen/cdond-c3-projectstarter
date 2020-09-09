@@ -35,7 +35,8 @@
 - name: "move backend files to server"
   become: true
   copy:
-    remote_src: /home/ubuntu/backend/dist
+    remote_src: yes
+    src: /home/ubuntu/backend/dist
     dest: /etc/project
     mode: '0777'
 
