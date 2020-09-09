@@ -167,7 +167,29 @@ jobs:
                --data ${PUBLIC_DNS} \
                https://api.memstash.io/values/public_dns
       - slack/status
-              
+
+  deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Build the frontend
+          command: |
+            cd frontend
+            npm install
+            npm run build
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            export default API_URL=${PUBLIC_DNS}
+      - run: 
+          name: Copy built frontend files to the S3 bucket
+          command: |
+            aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+
   deploy-backend:
     docker:
       - image: << pipeline.parameters.py_alp_image >>
@@ -187,8 +209,6 @@ jobs:
             cd backend
             npm install
             npm run build
-      - add_ssh_keys:
-          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
           name: Get the public DNS of EC2 instance from https://memstash.io/
           command: |
@@ -198,6 +218,8 @@ jobs:
             echo "[all]" > ./inventory
             echo ${PUBLIC_DNS} >> ./inventory
             cat ./inventory
+      - add_ssh_keys:
+          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
           name: Configure server
           command: |
@@ -258,6 +280,9 @@ workflows:
   deploy:
     jobs:
       - create-infrastructure
+      - deploy-frontend:
+          requires:
+            - create-infrastructure
       - deploy-backend:
           requires:
             - create-infrastructure

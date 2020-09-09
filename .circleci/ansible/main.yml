@@ -1,5 +1,5 @@
 ---
-- name: "UdaPeople Configurations"
+- name: "Udapeople Server Configurations"
   hosts: all
   user: ubuntu
  
