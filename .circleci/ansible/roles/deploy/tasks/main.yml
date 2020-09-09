@@ -29,7 +29,7 @@
 - name: "run the node server"
   shell: |
     cd /home/ubuntu/backend
-    npm run start:dev
+    npm run start:dev &
 
 # - name: "creates directory"
 #   become: true
