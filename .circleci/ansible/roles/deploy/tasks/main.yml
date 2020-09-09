@@ -40,7 +40,7 @@
     dest: /etc/project
     mode: '0777'
 
-- name: "executing node"
+- name: "execute pm2"
   become: true
   shell: |
-    pm2 start /etc/project/dist/main.js -f
+    NODE_PORT=3030 pm2 start /etc/project/dist/main.js -f
