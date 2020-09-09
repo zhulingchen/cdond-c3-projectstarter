@@ -197,6 +197,7 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory main.yml
+      - slack/status
 
   deploy-frontend:
     docker:
@@ -226,6 +227,7 @@ jobs:
           name: Copy built frontend files to the S3 bucket
           command: |
             aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+      - slack/status
 
 #  run-migrations: 
 
@@ -255,6 +257,7 @@ jobs:
                 echo deleting stack $stack
                 aws cloudformation delete-stack --stack-name $stack
             done
+      - slack/status
 
 workflows:
   frontend:
