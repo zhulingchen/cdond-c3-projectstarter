@@ -35,11 +35,11 @@
 - name: "move backend files to server"
   become: true
   copy:
-    src: /home/ubuntu/backend/dist
+    remote_src: /home/ubuntu/backend/dist
     dest: /etc/project
     mode: '0777'
 
 - name: "executing node"
   become: true
   shell: |
-    pm2 start /etc/project/dist/main.js -f 
+    pm2 start /etc/project/dist/main.js -f
