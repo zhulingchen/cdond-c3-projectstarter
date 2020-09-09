@@ -141,7 +141,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create frontend infrastructure
+          name: Create/Update frontend infrastructure
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-frontend \
@@ -149,7 +149,7 @@ jobs:
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - run:
-          name: Create backend infrastructure
+          name: Create/Update backend infrastructure
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-backend \
@@ -168,6 +168,36 @@ jobs:
                https://api.memstash.io/values/public_dns
       - slack/status
 
+  deploy-backend:
+    docker:
+      - image: << pipeline.parameters.py_alp_image >>
+    steps:
+      - checkout
+      - run:
+          name: Install system dependencies
+          command: |
+            apk add --no-cache curl
+            apk add --no-cache --upgrade bash
+            apk add --no-cache --update ansible
+            apk add --no-cache openssh-client
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            cd .circleci/ansible/
+            echo "[all]" > ./inventory
+            echo ${PUBLIC_DNS} >> ./inventory
+            cat ./inventory
+      - add_ssh_keys:
+          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
+      - run:
+          name: Configure server
+          command: |
+            printenv >> ./backend/.env
+            cd .circleci/ansible/
+            ansible-playbook -i ./inventory main.yml
+
   deploy-frontend:
     docker:
       - image: << pipeline.parameters.py_alp_image >>
@@ -185,7 +215,7 @@ jobs:
           command: |
             PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
             echo ${PUBLIC_DNS}
-            export default API_URL=${PUBLIC_DNS}
+            export default API_URL=http://${PUBLIC_DNS}:3030
       - run:
           name: Build the frontend
           command: |
@@ -197,43 +227,6 @@ jobs:
           command: |
             aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
 
-  deploy-backend:
-    docker:
-      - image: << pipeline.parameters.py_alp_image >>
-    steps:
-      - checkout
-      - run:
-          name: Install system dependencies
-          command: |
-            apk add --no-cache curl
-            apk add --no-cache --upgrade bash
-            apk add --no-cache --update ansible
-            apk add --no-cache openssh-client
-            apk add --no-cache --update npm
-      - run:
-          name: Build the backend
-          command: |
-            cd backend
-            npm install
-            npm run build
-      - run:
-          name: Get the public DNS of EC2 instance from https://memstash.io/
-          command: |
-            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
-            echo ${PUBLIC_DNS}
-            cd .circleci/ansible/
-            echo "[all]" > ./inventory
-            echo ${PUBLIC_DNS} >> ./inventory
-            cat ./inventory
-      - add_ssh_keys:
-          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
-      - run:
-          name: Configure server
-          command: |
-            cd .circleci/ansible/
-            ansible-playbook -i ./inventory main.yml
-
-
 #  run-migrations: 
 
 #  smoke-test:
@@ -244,9 +237,13 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      - checkout    
+      - checkout
       - run:
-          name: Destroy and clear the backend stack resources
+          name: Remove all files at S3 bucket used for frontend
+          command: |
+            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID} --recursive
+      - run:
+          name: Destroy and clear stack resources (S3 bucket should be cleared first)
           command: |
             STACK_NAME=$(aws cloudformation list-stacks \
               --stack-status-filter CREATE_IN_PROGRESS CREATE_COMPLETE ROLLBACK_IN_PROGRESS ROLLBACK_FAILED ROLLBACK_COMPLETE DELETE_IN_PROGRESS DELETE_FAILED UPDATE_IN_PROGRESS UPDATE_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_COMPLETE UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_FAILED UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE REVIEW_IN_PROGRESS \
@@ -287,12 +284,16 @@ workflows:
   deploy:
     jobs:
       - create-infrastructure
-      - deploy-frontend:
-          requires:
-            - create-infrastructure
       - deploy-backend:
           requires:
             - create-infrastructure
-      #- clean-infrastructure:
+      - deploy-frontend:
+          requires:
+            - deploy-backend
+      # - smoke-tet:
+      #     requires:
+      #       - deploy-frontend
+      #       - deploy-backend
+      # - clean-infrastructure:
       #    requires:
       #      - deploy-backend

@@ -1,17 +1,27 @@
-- name: "creates directory"
-  become: true
-  file:
-    path: /etc/project
-    state: directory
-
-- name: "move backend files to server"
-  become: true
+- name: Copying files from CircleCI to Server
   copy:
-    src: /root/project/backend/dist
-    dest: /etc/project
-    mode: '0777'
+    src: /root/project/backend
+    dest: /home/ubuntu
 
-- name: "executing node"
-  become: true
+- name: Stopping PM2
+  ignore_errors: yes
   shell: |
-    pm2 start /etc/project/dist/main.js -f 
+    cd /home/ubuntu/backend
+    pm2 stop backend
+    pm2 delete backend
+
+- name: Installing node dependencies
+  shell: |
+    cd /home/ubuntu/backend    
+    npm install 
+
+- name: Building node service
+  shell: |
+    cd /home/ubuntu/backend
+    npm run build
+
+
+- name: Run node migrations and saving to MemStash.io
+  shell: |
+    cd /home/ubuntu/backend
+    npm run migrations > migrations.txt
