@@ -26,26 +26,21 @@
     npm run migrations > migrations.txt
     curl -H "Content-Type: text/plain" -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request PUT --data $( grep -c "No migrations are pending" migrations.txt ) https://api.memstash.io/values/migration_status
 
-- name: "run the node server"
+- name: "creates directory"
+  become: true
+  file:
+    path: /etc/project
+    state: directory
+
+- name: "move backend files to server"
+  become: true
+  copy:
+    remote_src: yes
+    src: /home/ubuntu/backend/dist
+    dest: /etc/project
+    mode: '0777'
+
+- name: "use pm2 to run the node server"
+  become: true
   shell: |
-    cd /home/ubuntu/backend
-    npm run start:dev &
-
-# - name: "creates directory"
-#   become: true
-#   file:
-#     path: /etc/project
-#     state: directory
-
-# - name: "move backend files to server"
-#   become: true
-#   copy:
-#     remote_src: yes
-#     src: /home/ubuntu/backend/dist
-#     dest: /etc/project
-#     mode: '0777'
-
-# - name: "execute pm2"
-#   become: true
-#   shell: |
-#     NODE_PORT=3030 pm2 start /etc/project/dist/main.js -f
+    pm2 start npm -- run "start:dev"
