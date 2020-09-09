@@ -27,9 +27,26 @@ commands:
             fi
           when: on_fail
 
-#   revert-migration:
-#     description: Revert the last migration if successfully run in the current workflow.
-#     ...
+  revert-migration:
+    description: Revert the last migration if successfully run in the current workflow
+    steps:
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            cd .circleci/ansible/
+            echo "[all]" > ./inventory
+            echo ${PUBLIC_DNS} >> ./inventory
+            cat ./inventory
+          when: on_fail
+      - run:
+          name: Configure server
+          command: |
+            printenv >> ./backend/.env
+            cd .circleci/ansible/
+            ansible-playbook -i ./inventory db_rollback.yml
+          when: on_fail
 
 parameters:
   circleci_image:
@@ -203,6 +220,7 @@ jobs:
             apk add --no-cache --upgrade bash
             apk add --no-cache --update ansible
             apk add --no-cache openssh-client
+            pip3 install awscli
       - run:
           name: Get the public DNS of EC2 instance from https://memstash.io/
           command: |
@@ -220,6 +238,7 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory main.yml
+      - revert-migration
       - destroy-aws-resource
       - slack/status
 
@@ -265,6 +284,7 @@ jobs:
           command: |
             apk add --no-cache curl
             apk add --no-cache --upgrade bash
+            pip3 install awscli
       - run:
           name: Smoke Test on Frontend
           command: |
@@ -280,6 +300,7 @@ jobs:
           command: |
             PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
             curl "http://${PUBLIC_DNS}:3030/api/status"
+      - revert-migration
       - destroy-aws-resource
       - slack/status
 
