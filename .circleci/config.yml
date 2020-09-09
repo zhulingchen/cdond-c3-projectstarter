@@ -2,10 +2,30 @@ version: 2.1
 
 ### It's a good practice to keep your commands at the top of the config file. In this project, you'll need at least 2 commands:
 
-# commands:
-#   destroy-environment:
-#     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
-#     ...
+commands:
+  destroy-aws-resource:
+    description: Destroy backend and frontend cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Delete all files in S3 bucket
+          command: |
+            if aws s3api head-bucket --bucket udapeople-${CIRCLE_WORKFLOW_ID}
+            then
+              aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+            fi
+          when: on_fail
+      - run:
+          name: Delete current AWS CloudFormation stacks
+          command: |
+            if aws cloudformation describe-stacks --stack-name udapeople-frontend
+            then 
+              aws cloudformation delete-stack --stack-name udapeople-frontend
+            fi
+            if aws cloudformation describe-stacks --stack-name udapeople-backend
+            then
+              aws cloudformation delete-stack --stack-name udapeople-backend
+            fi
+          when: on_fail
 
 #   revert-migration:
 #     description: Revert the last migration if successfully run in the current workflow.
@@ -168,6 +188,7 @@ jobs:
                --request PUT \
                --data ${PUBLIC_DNS} \
                https://api.memstash.io/values/public_dns
+      - destroy-aws-resource
       - slack/status
 
   deploy-backend:
@@ -199,6 +220,7 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory main.yml
+      - destroy-aws-resource
       - slack/status
 
   deploy-frontend:
@@ -229,6 +251,7 @@ jobs:
           name: Copy built frontend files to the S3 bucket
           command: |
             aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+      - destroy-aws-resource
       - slack/status
 
 #  run-migrations: 
@@ -257,6 +280,7 @@ jobs:
           command: |
             PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
             curl "http://${PUBLIC_DNS}:3030/api/status"
+      - destroy-aws-resource
       - slack/status
 
 #  cloudfront-update:
