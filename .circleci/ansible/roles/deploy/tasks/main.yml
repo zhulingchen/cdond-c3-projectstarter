@@ -1,0 +1,32 @@
+- name: "copy files from CircleCI to server"
+  copy:
+    src: /root/project/backend
+    dest: /home/ubuntu
+
+- name: "stop PM2"
+  ignore_errors: yes
+  shell: |
+    cd /home/ubuntu/backend
+    pm2 stop backend
+    pm2 delete backend
+
+- name: "install node dependencies"
+  shell: |
+    cd /home/ubuntu/backend    
+    npm install 
+
+- name: "build node service"
+  shell: |
+    cd /home/ubuntu/backend
+    npm run build
+
+- name: "run node migrations and save to https://memstash.io/"
+  shell: |
+    cd /home/ubuntu/backend
+    npm run migrations > migrations.txt
+    curl -H "Content-Type: text/plain" -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request PUT --data $( grep -c "No migrations are pending" migrations.txt ) https://api.memstash.io/values/migration_status
+
+- name: "use pm2 to run the node server"
+  shell: |
+    cd /home/ubuntu/backend
+    pm2 start npm -- run "start:dev"

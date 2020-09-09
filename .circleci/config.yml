@@ -12,9 +12,12 @@ version: 2.1
 #     ...
 
 parameters:
-  image:
+  circleci_image:
     type: string
     default: circleci/node:latest
+  py_alp_image:
+    type: string
+    default: python:3.7-alpine3.11
 
 orbs:
   slack: circleci/slack@3.4.2  # for slack integration to https://udapeople.slack.com; reference: https://circleci.com/blog/continuous-integration-slack-twilio/
@@ -22,17 +25,19 @@ orbs:
 jobs:
   hello:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - run: echo "My pipeline id is << pipeline.id >> and my git branch is << pipeline.git.branch >>."
       - checkout
       - run: pwd
       - run: ls -Rla ~
       - run: node -v
+      - run: df -h
+      - run: free -h
 
   build-frontend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -49,7 +54,7 @@ jobs:
 
   test-frontend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -66,7 +71,7 @@ jobs:
 
   analyze-frontend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -83,7 +88,7 @@ jobs:
 
   build-backend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -100,7 +105,7 @@ jobs:
 
   test-backend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -117,7 +122,7 @@ jobs:
 
   analyze-backend:
     docker:
-      - image: << pipeline.parameters.image >>
+      - image: << pipeline.parameters.circleci_image >>
     steps:
       - checkout
       - run:
@@ -138,7 +143,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create frontend infrastructure
+          name: Create/Update frontend infrastructure
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-frontend \
@@ -146,7 +151,7 @@ jobs:
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - run:
-          name: Create backend infrastructure
+          name: Create/Update backend infrastructure
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-backend \
@@ -164,12 +169,95 @@ jobs:
                --data ${PUBLIC_DNS} \
                https://api.memstash.io/values/public_dns
       - slack/status
-              
-#  deploy-infrastructure:
+
+  deploy-backend:
+    docker:
+      - image: << pipeline.parameters.py_alp_image >>
+    steps:
+      - checkout
+      - run:
+          name: Install system dependencies
+          command: |
+            apk add --no-cache curl
+            apk add --no-cache --upgrade bash
+            apk add --no-cache --update ansible
+            apk add --no-cache openssh-client
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            cd .circleci/ansible/
+            echo "[all]" > ./inventory
+            echo ${PUBLIC_DNS} >> ./inventory
+            cat ./inventory
+      - add_ssh_keys:
+          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
+      - run:
+          name: Configure server
+          command: |
+            printenv >> ./backend/.env
+            cd .circleci/ansible/
+            ansible-playbook -i ./inventory main.yml
+      - slack/status
+
+  deploy-frontend:
+    docker:
+      - image: << pipeline.parameters.py_alp_image >>
+    steps:
+      - checkout
+      - run:
+          name: Install system dependencies
+          command: |
+            apk add --no-cache curl
+            apk add --no-cache --upgrade bash
+            apk add --no-cache --update npm
+            pip3 install awscli
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/ (frontend build needs ${API_URL})
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            export default API_URL=http://${PUBLIC_DNS}:3030
+      - run:
+          name: Build the frontend
+          command: |
+            cd frontend
+            npm install
+            npm run build
+      - run: 
+          name: Copy built frontend files to the S3 bucket
+          command: |
+            aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+      - slack/status
 
 #  run-migrations: 
 
-#  smoke-test:
+  smoke-test:
+    docker:
+      - image: << pipeline.parameters.py_alp_image >>
+    steps:
+      - run:
+          name: Install system dependencies
+          command: |
+            apk add --no-cache curl
+            apk add --no-cache --upgrade bash
+      - run:
+          name: Smoke Test on Frontend
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 0
+            else
+              return 1
+            fi
+      - run:
+          name: Smoke Test on Backend
+          command: |
+            PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
+            curl "http://${PUBLIC_DNS}:3030/api/status"
+      - slack/status
 
 #  cloudfront-update:
 
@@ -179,11 +267,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Destroy and clear the frontend s3 stack
+          name: Remove all files at S3 bucket used for frontend
           command: |
-            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID} --recursive     
+            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID} --recursive
       - run:
-          name: Destroy and clear the backend stack resources
+          name: Destroy and clear stack resources (S3 bucket should be cleared first)
           command: |
             STACK_NAME=$(aws cloudformation list-stacks \
               --stack-status-filter CREATE_IN_PROGRESS CREATE_COMPLETE ROLLBACK_IN_PROGRESS ROLLBACK_FAILED ROLLBACK_COMPLETE DELETE_IN_PROGRESS DELETE_FAILED UPDATE_IN_PROGRESS UPDATE_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_COMPLETE UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_FAILED UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE REVIEW_IN_PROGRESS \
@@ -195,6 +283,7 @@ jobs:
                 echo deleting stack $stack
                 aws cloudformation delete-stack --stack-name $stack
             done
+      - slack/status
 
 workflows:
   frontend:
@@ -221,9 +310,18 @@ workflows:
       - analyze-backend:
           requires:
             - test-backend
-  infrastructure:
+  deploy:
     jobs:
       - create-infrastructure
-      - clean-infrastructure:
+      - deploy-backend:
           requires:
             - create-infrastructure
+      - deploy-frontend:
+          requires:
+            - deploy-backend
+      - smoke-test:
+          requires:
+            - deploy-frontend
+      # - clean-infrastructure:
+      #    requires:
+      #      - deploy-backend
