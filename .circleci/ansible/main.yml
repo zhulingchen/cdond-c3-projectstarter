@@ -22,6 +22,6 @@
   gather_facts: false
 
   roles:
-      - config-server
+      - configure-server
       - deploy
       - configure-prometheus-node-exporter
