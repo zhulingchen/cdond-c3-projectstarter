@@ -316,7 +316,7 @@ workflows:
       - deploy-frontend:
           requires:
             - deploy-backend
-      - smoke-tet:
+      - smoke-test:
           requires:
             - deploy-frontend
             - deploy-backend
