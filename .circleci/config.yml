@@ -32,6 +32,8 @@ jobs:
       - run: pwd
       - run: ls -Rla ~
       - run: node -v
+      - run: df -h
+      - run: free -h
 
   build-frontend:
     docker:
@@ -319,7 +321,6 @@ workflows:
       - smoke-test:
           requires:
             - deploy-frontend
-            - deploy-backend
       # - clean-infrastructure:
       #    requires:
       #      - deploy-backend
