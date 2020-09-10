@@ -1,6 +1,7 @@
-- name: "run node migrations and save to https://memstash.io/"
+- name: "load migration status from https://memstash.io/ and revert migration if necessary"
   shell: |
     MIGRATION_STATUS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/migration_status)
+    echo ${MIGRATION_STATUS}
     if [[ ${MIGRATION_STATUS} == 1 ]]
     then
       cd /home/ubuntu/backend
