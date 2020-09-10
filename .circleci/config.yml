@@ -71,6 +71,7 @@ jobs:
       - image: << pipeline.parameters.circleci_image >>
     steps:
       - run: echo "My pipeline id is << pipeline.id >> and my git branch is << pipeline.git.branch >>."
+      - run: printenv
       - checkout
       - run: pwd
       - run: ls -Rla ~
@@ -395,19 +396,37 @@ workflows:
             - test-backend
   deploy:
     jobs:
-      - create-infrastructure
+      - create-infrastructure:
+          filters:
+            branches:
+              only: master
       - deploy-backend:
           requires:
             - create-infrastructure
+          filters:
+            branches:
+              only: master
       - deploy-frontend:
           requires:
             - deploy-backend
+          filters:
+            branches:
+              only: master
       - create-cloudfront:
           requires:
             - deploy-frontend
+          filters:
+            branches:
+              only: master
       - smoke-test:
           requires:
             - create-cloudfront
+          filters:
+            branches:
+              only: master
       - clean-infrastructure:
-         requires:
-           - smoke-test
+          requires:
+            - smoke-test
+          filters:
+            branches:
+              only: master
