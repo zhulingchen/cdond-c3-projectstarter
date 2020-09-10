@@ -44,11 +44,14 @@ commands:
             echo ${PUBLIC_DNS} >> ./inventory
             cat ./inventory
           when: on_fail
+      - add_ssh_keys:
+          fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
           name: Configure server
           command: |
-            printenv >> ./backend/.env
-            cd .circleci/ansible/
+            pwd
+            printenv >> ~/project/backend/.env
+            cd ~/project/.circleci/ansible/
             ansible-playbook -i ./inventory db_rollback.yml
           when: on_fail
 
