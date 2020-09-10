@@ -1,21 +1,4 @@
-- name: "copy files from CircleCI to server"
-  copy:
-    src: /root/project/backend
-    dest: /home/ubuntu
-
-- name: "stop PM2"
-  ignore_errors: yes
-  shell: |
-    cd /home/ubuntu/backend
-    pm2 stop backend
-    pm2 delete backend
-
-- name: "install node dependencies"
-  shell: |
-    cd /home/ubuntu/backend    
-    npm install 
-
-- name: "build node service"
+- name: "build package"
   shell: |
     cd /home/ubuntu/backend
     npm run build
