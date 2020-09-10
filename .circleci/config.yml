@@ -186,13 +186,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Delete all files in old S3 buckets whose names start with 'udapeople-'
+          name: Delete all S3 buckets whose names start with 'udapeople-'
           command: |
             OLD_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'udapeople-')].Name" --output text)
             for bucket in ${OLD_BUCKET}
             do  
-                echo deleting all files in bucket $bucket
-                aws s3 rm s3://$bucket/ --recursive
+                echo deleting bucket $bucket
+                aws s3 rb --force s3://$bucket
             done
       - run:
           name: Create/Update frontend infrastructure via AWS CloudFormation
