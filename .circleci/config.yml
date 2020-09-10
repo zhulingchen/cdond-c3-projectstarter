@@ -341,8 +341,6 @@ jobs:
       - destroy-aws-resource
       - slack/status
 
-#  cloudfront-update:
-
   clean-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -410,6 +408,6 @@ workflows:
       - smoke-test:
           requires:
             - create-cloudfront
-      # - clean-infrastructure:
-      #    requires:
-      #      - deploy-backend
+      - clean-infrastructure:
+         requires:
+           - smoke-test
