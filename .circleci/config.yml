@@ -289,7 +289,7 @@ jobs:
               --stack-name udapeople-cloudfront \
               --template-file .circleci/files/cloudfront.yml \
               --region ${AWS_DEFAULT_REGION} \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID}"
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - destroy-aws-resource
       - slack/status
 
