@@ -17,6 +17,10 @@ commands:
       - run:
           name: Delete current AWS CloudFormation stacks
           command: |
+            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront
+            then 
+              aws cloudformation delete-stack --stack-name udapeople-cloudfront
+            fi
             if aws cloudformation describe-stacks --stack-name udapeople-frontend
             then 
               aws cloudformation delete-stack --stack-name udapeople-frontend
@@ -273,7 +277,21 @@ jobs:
       - destroy-aws-resource
       - slack/status
 
-#  run-migrations: 
+  create-cloudfront:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create/Update CloudFront
+          command: |
+            aws cloudformation deploy \
+              --stack-name udapeople-cloudfront \
+              --template-file .circleci/files/cloudfront.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID}"
+      - destroy-aws-resource
+      - slack/status
 
   smoke-test:
     docker:
@@ -371,6 +389,9 @@ workflows:
       - deploy-frontend:
           requires:
             - deploy-backend
+      - create-cloudfront:
+          requires:
+            - deploy-frontend
       - smoke-test:
           requires:
             - deploy-frontend
