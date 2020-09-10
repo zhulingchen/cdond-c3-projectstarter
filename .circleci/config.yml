@@ -7,7 +7,7 @@ commands:
     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
     steps:
       - run:
-          name: Delete all files in S3 bucket
+          name: Delete all files in the current S3 bucket
           command: |
             if aws s3api head-bucket --bucket udapeople-${CIRCLE_WORKFLOW_ID}
             then
@@ -15,7 +15,7 @@ commands:
             fi
           when: on_fail
       - run:
-          name: Delete current AWS CloudFormation stacks
+          name: Delete the current AWS CloudFormation stacks
           command: |
             if aws cloudformation describe-stacks --stack-name udapeople-cloudfront
             then 
@@ -47,7 +47,7 @@ commands:
       - add_ssh_keys:
           fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
-          name: Configure server
+          name: Configure server via ansible to revert the last migration
           command: |
             printenv >> ./backend/.env
             cd .circleci/ansible/
@@ -186,7 +186,16 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create/Update frontend infrastructure
+          name: Delete all files in old S3 buckets whose names start with 'udapeople-'
+          command: |
+            OLD_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'udapeople-')].Name" --output text)
+            for bucket in ${OLD_BUCKET}
+            do  
+                echo deleting all files in bucket $bucket
+                aws s3 rm s3://$bucket/ --recursive
+            done
+      - run:
+          name: Create/Update frontend infrastructure via AWS CloudFormation
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-frontend \
@@ -194,7 +203,7 @@ jobs:
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - run:
-          name: Create/Update backend infrastructure
+          name: Create/Update backend infrastructure via AWS CloudFormation
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-backend \
@@ -239,7 +248,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["f2:e7:96:70:ce:5d:29:68:ec:2d:1d:33:71:52:8b:05"] # get it from CircleCI -> Project Settings -> SSH Keys -> Additional SSH Keys
       - run:
-          name: Configure server
+          name: Configure server via ansible to deploy the backend
           command: |
             printenv >> ./backend/.env
             cd .circleci/ansible/
@@ -285,7 +294,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create/Update CloudFront
+          name: Create/Update CloudFront via AWS CloudFormation
           command: |
             aws cloudformation deploy \
               --stack-name udapeople-cloudfront \
@@ -309,7 +318,7 @@ jobs:
             apk add --no-cache openssh-client
             pip3 install awscli
       - run:
-          name: Smoke Test on Frontend
+          name: Smoke test on frontend
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
             if curl -s ${URL} | grep "Welcome"
@@ -319,7 +328,7 @@ jobs:
               return 1
             fi
       - run:
-          name: Smoke Test on Backend
+          name: Smoke test on backend
           command: |
             PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
             if curl -s "http://${PUBLIC_DNS}:3030/api/status" | grep "ok"
@@ -342,7 +351,10 @@ jobs:
       - run:
           name: Remove all files at S3 bucket used for frontend
           command: |
-            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID} --recursive
+            if aws s3api head-bucket --bucket udapeople-${CIRCLE_WORKFLOW_ID}
+            then
+              aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+            fi
       - run:
           name: Destroy and clear stack resources (S3 bucket should be cleared first)
           command: |
