@@ -316,12 +316,12 @@ jobs:
               return 1
             fi
       - run:
-          name: Smoke Test on Backend
+          name: Smoke Test on Backend (make a mistake deliberately)
           command: |
             PUBLIC_DNS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/public_dns)
             if curl -s "http://${PUBLIC_DNS}:3030/api/status" | grep "ok"
             then
-              return 0
+              return 1
             else
               return 1
             fi
