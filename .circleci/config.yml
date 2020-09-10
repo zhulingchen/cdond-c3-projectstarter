@@ -49,9 +49,8 @@ commands:
       - run:
           name: Configure server
           command: |
-            pwd
-            printenv >> ~/project/backend/.env
-            cd ~/project/.circleci/ansible/
+            printenv >> ./backend/.env
+            cd .circleci/ansible/
             ansible-playbook -i ./inventory db_rollback.yml
           when: on_fail
 
@@ -300,6 +299,7 @@ jobs:
     docker:
       - image: << pipeline.parameters.py_alp_image >>
     steps:
+      - checkout
       - run:
           name: Install system dependencies
           command: |
@@ -397,7 +397,7 @@ workflows:
             - deploy-frontend
       - smoke-test:
           requires:
-            - deploy-frontend
+            - create-cloudfront
       # - clean-infrastructure:
       #    requires:
       #      - deploy-backend
