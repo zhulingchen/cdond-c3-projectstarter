@@ -4,7 +4,7 @@ version: 2.1
 
 commands:
   destroy-aws-resource:
-    description: Destroy backend and frontend cloudformation stacks given a workflow ID.
+    description: Destroy all cloudformation stacks given a workflow ID.
     steps:
       - run:
           name: Delete all files in the current S3 bucket
@@ -32,7 +32,7 @@ commands:
           when: on_fail
 
   revert-migration:
-    description: Revert the last migration if successfully run in the current workflow
+    description: Revert the latest migration
     steps:
       - run:
           name: Get the public DNS of EC2 instance from https://memstash.io/
