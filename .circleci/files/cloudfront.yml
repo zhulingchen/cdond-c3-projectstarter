@@ -20,7 +20,7 @@ Resources:
     Properties:
       DistributionConfig:
         Origins:
-          - DomainName: !Sub "udapeople-${ID}.s3.amazonaws.com"
+          - DomainName: !Sub "udapeople-s3bucket-${ID}.s3.amazonaws.com"
             Id: webpage
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
@@ -37,7 +37,7 @@ Outputs:
     Value: !Sub "${ID}"
     Description: CircleCI workflow ID
   DomainName:
-    Value: !Sub "udapeople-${ID}.s3.amazonaws.com"
+    Value: !Sub "udapeople-s3bucket-${ID}.s3.amazonaws.com"
     Description: URL for website hosted on S3
     Export:
       Name: DomainName
