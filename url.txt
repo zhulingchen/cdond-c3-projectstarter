@@ -1,0 +1,19 @@
+URL01:
+  github repository:
+    https://github.com/zhulingchen/cdond-c3-projectstarter
+
+URL02:
+  public URL for my S3 Bucket:
+    http://udapeople-2b471b81-5c69-4a91-87de-a02ae136d1b5.s3-website.us-east-2.amazonaws.com/
+
+URL03:
+  public URL for my CloudFront distribution:
+    d273nevh0ldh9e.cloudfront.net
+
+URL04:
+  public URL for my back-end server in EC2:
+    ec2-3-19-55-38.us-east-2.compute.amazonaws.com
+
+URL05:
+  URL to my Prometheus server:
+    http://ec2-13-59-109-162.us-east-2.compute.amazonaws.com:9090
