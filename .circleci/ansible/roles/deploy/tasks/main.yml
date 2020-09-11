@@ -8,6 +8,8 @@
     cd /home/ubuntu/backend
     npm run migrations > migrations.txt
     cat migrations.txt
+    export CIRCLE_WORKFLOW_ID="{{ CIRCLE_WORKFLOW_ID }}"
+    printenv | grep CIRCLE_WORKFLOW_ID
     curl -H "Content-Type: text/plain" -H "token: ${CIRCLE_WORKFLOW_ID}" --request PUT --data $( grep -c "No migrations are pending" migrations.txt ) https://api.memstash.io/values/migration_status
 
 - name: "use pm2 to run the node server"

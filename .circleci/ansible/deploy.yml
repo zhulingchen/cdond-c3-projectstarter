@@ -26,7 +26,3 @@
     - configure-server
     - deploy
     - configure-prometheus-node-exporter
-
-  environment:
-    TEST_VAR: test
-    CIRCLE_WORKFLOW_ID: "{{ CIRCLE_WORKFLOW_ID }}"
