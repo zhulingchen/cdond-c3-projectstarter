@@ -9,3 +9,7 @@
       cd /home/ubuntu/backend
       npm run migrations:revert
     fi
+  register: revert_migration_output
+
+- debug:
+    msg=revert_migration_output.stdout_lines
