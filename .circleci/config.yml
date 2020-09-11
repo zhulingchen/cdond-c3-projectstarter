@@ -17,9 +17,9 @@ commands:
       - run:
           name: Delete the current AWS CloudFormation stacks
           command: |
-            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID}
+            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront
             then 
-              aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID}
+              aws cloudformation delete-stack --stack-name udapeople-cloudfront
             fi
             if aws cloudformation describe-stacks --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
             then 
@@ -181,7 +181,7 @@ jobs:
             npm audit fix --audit-level=critical --force
       - slack/status
 
-  create-infrastructure:
+  create-new-infrastructure:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -336,43 +336,38 @@ jobs:
           name: Create/Update CloudFront via AWS CloudFormation
           command: |
             aws cloudformation deploy \
-              --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID} \
+              --stack-name udapeople-cloudfront \
               --template-file .circleci/files/cloudfront.yml \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - destroy-aws-resource
       - slack/status
 
-  clean-infrastructure:
+  delete-old-infrastructure:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
-      #
-      # aws cloudformation describe-stacks --stack-name udapeople-frontend --query "Stacks[0].Outputs[?OutputKey==\`ID\`].OutputValue" --output text
-      # aws s3api list-buckets --query "Buckets[?contains(Name, 'uda')].Name" --output text
-      # aws cloudformation describe-stacks --stack-name udapeople-frontend --query "Stacks[0].Outputs[?OutputKey==\`ID\`].OutputValue" --output text
-      #
-      # - run:
-      #     name: Remove all files at S3 bucket used for frontend
-      #     command: |
-      #       if aws s3api head-bucket --bucket udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}
-      #       then
-      #         aws s3 rm s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
-      #       fi
-      # - run:
-      #     name: Destroy and clear stack resources (S3 bucket should be cleared first)
-      #     command: |
-      #       STACK_NAME=$(aws cloudformation list-stacks \
-      #         --stack-status-filter CREATE_IN_PROGRESS CREATE_COMPLETE ROLLBACK_IN_PROGRESS ROLLBACK_FAILED ROLLBACK_COMPLETE DELETE_IN_PROGRESS DELETE_FAILED UPDATE_IN_PROGRESS UPDATE_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_COMPLETE UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_FAILED UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE REVIEW_IN_PROGRESS \
-      #         --query "StackSummaries[*].StackName" \
-      #         --output text)
-      #       echo ${STACK_NAME}
-      #       for stack in ${STACK_NAME}
-      #       do  
-      #           echo deleting stack $stack
-      #           aws cloudformation delete-stack --stack-name $stack
-      #       done
+      - run:
+          name: Get the old CircleCI workflow ID
+          command: |
+            OLD_CIRCLE_WORKFLOW_ID=$(aws cloudformation list-exports --query "Exports[?Name=='CircleCI-WorkflowID'].Value" --output text)
+            echo ${OLD_CIRCLE_WORKFLOW_ID}
+            if aws s3api head-bucket --bucket udapeople-s3bucket-${OLD_CIRCLE_WORKFLOW_ID}
+            then
+              echo deleting all files at S3 bucket udapeople-s3bucket-${OLD_CIRCLE_WORKFLOW_ID}
+              aws s3 rm s3://udapeople-s3bucket-${OLD_CIRCLE_WORKFLOW_ID}/ --recursive
+            fi
+            if aws cloudformation describe-stacks --stack-name udapeople-frontend-${OLD_CIRCLE_WORKFLOW_ID}
+            then
+              echo deleting stack udapeople-frontend-${OLD_CIRCLE_WORKFLOW_ID}
+              aws cloudformation delete-stack --stack-name udapeople-frontend-${OLD_CIRCLE_WORKFLOW_ID}
+            fi
+            if aws cloudformation describe-stacks --stack-name udapeople-backend-${OLD_CIRCLE_WORKFLOW_ID}
+            then
+              echo deleting stack udapeople-backend-${OLD_CIRCLE_WORKFLOW_ID}
+              aws cloudformation delete-stack --stack-name udapeople-backend-${OLD_CIRCLE_WORKFLOW_ID}
+            fi
       - slack/status
 
 workflows:
@@ -426,13 +421,13 @@ workflows:
               ignore: master
   deploy:
     jobs:
-      - create-infrastructure:
+      - create-new-infrastructure:
           filters:
             branches:
               only: master
       - deploy-backend:
           requires:
-            - create-infrastructure
+            - create-new-infrastructure
           filters:
             branches:
               only: master
@@ -454,9 +449,9 @@ workflows:
           filters:
             branches:
               only: master
-      # - clean-infrastructure:
-      #     requires:
-      #       - update-cloudfront
-      #     filters:
-      #       branches:
-      #         only: master
+      - delete-old-infrastructure:
+          requires:
+            - update-cloudfront
+          filters:
+            branches:
+              only: master
