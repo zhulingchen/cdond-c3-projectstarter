@@ -1,6 +1,6 @@
 - name: "load migration status from https://memstash.io/ and revert migration if necessary"
   shell: |
-    MIGRATION_STATUS=$(curl -H "token: de8dfebb-4853-48b3-88e7-67441f6ae6ad" --request GET https://api.memstash.io/values/migration_status)
+    MIGRATION_STATUS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/migration_status)
     echo ${MIGRATION_STATUS}
     if [[ ${MIGRATION_STATUS} == 1 ]]
     then

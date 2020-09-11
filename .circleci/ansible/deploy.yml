@@ -8,6 +8,7 @@
     host_key_checking: False
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
     # Get the environment variables from CircleCI and add to the instance
+    CIRCLE_WORKFLOW_ID: "{{ lookup('env','CIRCLE_WORKFLOW_ID') }}"
     TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
     TYPEORM_ENTITIES: "{{ lookup('env','TYPEORM_ENTITIES') }}"
     TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
@@ -19,9 +20,12 @@
     ENVIRONMENT: "{{ lookup('env','ENVIRONMENT') }}"
     #API_URL: "{{ lookup('env','API_URL') }}"
 
-  gather_facts: false
+  gather_facts: true
+
+  environment:
+    CIRCLE_WORKFLOW_ID: {{ CIRCLE_WORKFLOW_ID }}
 
   roles:
-      - configure-server
-      - deploy
-      - configure-prometheus-node-exporter
+    - configure-server
+    - deploy
+    - configure-prometheus-node-exporter
