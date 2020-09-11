@@ -289,22 +289,6 @@ jobs:
       - destroy-aws-resource
       - slack/status
 
-  create-cloudfront:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Create/Update CloudFront via AWS CloudFormation
-          command: |
-            aws cloudformation deploy \
-              --stack-name udapeople-cloudfront \
-              --template-file .circleci/files/cloudfront.yml \
-              --region ${AWS_DEFAULT_REGION} \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
-      - destroy-aws-resource
-      - slack/status
-
   smoke-test:
     docker:
       - image: << pipeline.parameters.py_alp_image >>
@@ -340,6 +324,22 @@ jobs:
               return 1
             fi
       - revert-migration
+      - destroy-aws-resource
+      - slack/status
+
+  update-cloudfront:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create/Update CloudFront via AWS CloudFormation
+          command: |
+            aws cloudformation deploy \
+              --stack-name udapeople-cloudfront \
+              --template-file .circleci/files/cloudfront.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - destroy-aws-resource
       - slack/status
 
@@ -437,21 +437,21 @@ workflows:
           filters:
             branches:
               only: master
-      - create-cloudfront:
+      - smoke-test:
           requires:
             - deploy-frontend
           filters:
             branches:
               only: master
-      - smoke-test:
+      - update-cloudfront:
           requires:
-            - create-cloudfront
+            - smoke-test
           filters:
             branches:
               only: master
       # - clean-infrastructure:
       #     requires:
-      #       - smoke-test
+      #       - update-cloudfront
       #     filters:
       #       branches:
       #         only: master
