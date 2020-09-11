@@ -8,7 +8,7 @@ Parameters:
 
 Resources:
   WebsiteBucket:
-    Type: AWS::S3::Bucket--deliberate-mistake
+    Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "udapeople-${ID}"
       AccessControl: PublicRead
