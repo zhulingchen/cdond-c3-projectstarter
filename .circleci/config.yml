@@ -319,12 +319,12 @@ jobs:
             apk add --no-cache openssh-client
             pip3 install awscli
       - run:
-          name: Smoke test on frontend
+          name: Smoke test on frontend (deliberate mistake introduced)
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
             if curl -s ${URL} | grep "Welcome"
             then
-              return 0
+              return 1
             else
               return 1
             fi
