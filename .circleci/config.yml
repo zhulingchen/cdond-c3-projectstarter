@@ -370,30 +370,54 @@ jobs:
       - slack/status
 
 workflows:
-  # frontend:
-  #   jobs:
-  #     - hello
-  #     - build-frontend:
-  #         requires:
-  #           - hello
-  #     - test-frontend:
-  #         requires:
-  #           - build-frontend
-  #     - analyze-frontend:
-  #         requires:
-  #           - test-frontend
-  # backend:
-  #   jobs:
-  #     - hello
-  #     - build-backend:
-  #         requires:
-  #           - hello
-  #     - test-backend:
-  #         requires:
-  #           - build-backend
-  #     - analyze-backend:
-  #         requires:
-  #           - test-backend
+  frontend:
+    jobs:
+      - hello:
+          filters:
+            branches:
+              ignore: master
+      - build-frontend:
+          requires:
+            - hello
+          filters:
+            branches:
+              ignore: master
+      - test-frontend:
+          requires:
+            - build-frontend
+          filters:
+            branches:
+              ignore: master
+      - analyze-frontend:
+          requires:
+            - test-frontend
+          filters:
+            branches:
+              ignore: master
+  backend:
+    jobs:
+      - hello:
+          filters:
+            branches:
+              ignore: master
+      - build-backend:
+          requires:
+            - hello
+          filters:
+            branches:
+              ignore: master
+      - test-backend:
+          requires:
+            - build-backend
+          filters:
+            branches:
+              ignore: master
+      - analyze-backend:
+          requires:
+            - test-backend
+          filters:
+            branches:
+              ignore: master
   deploy:
     jobs:
       - create-infrastructure:
