@@ -47,3 +47,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
+
+Outputs:
+  ID:
+    Value: !Sub "${ID}"
+    Description: CircleCI workflow ID
