@@ -35,6 +35,8 @@ Outputs:
   WebsiteURL:
     Value: !GetAtt WebsiteBucket.WebsiteURL
     Description: URL for website hosted on S3
-  WebsiteARN:
-    Value: !GetAtt WebsiteBucket.Arn
-    Description: ARN for S3 Bucket
+    Export:
+      Name: WebsiteURL
+  # WebsiteARN:
+  #   Value: !GetAtt WebsiteBucket.Arn
+  #   Description: ARN for S3 Bucket
