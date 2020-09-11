@@ -9,25 +9,25 @@ commands:
       - run:
           name: Delete all files in the current S3 bucket
           command: |
-            if aws s3api head-bucket --bucket udapeople-${CIRCLE_WORKFLOW_ID}
+            if aws s3api head-bucket --bucket udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}
             then
-              aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+              aws s3 rm s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
             fi
           when: on_fail
       - run:
           name: Delete the current AWS CloudFormation stacks
           command: |
-            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront
+            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID}
             then 
-              aws cloudformation delete-stack --stack-name udapeople-cloudfront
+              aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID}
             fi
-            if aws cloudformation describe-stacks --stack-name udapeople-frontend
+            if aws cloudformation describe-stacks --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
             then 
-              aws cloudformation delete-stack --stack-name udapeople-frontend
+              aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
             fi
-            if aws cloudformation describe-stacks --stack-name udapeople-backend
+            if aws cloudformation describe-stacks --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
             then
-              aws cloudformation delete-stack --stack-name udapeople-backend
+              aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
             fi
           when: on_fail
 
@@ -187,9 +187,9 @@ jobs:
     steps:
       - checkout
       # - run:
-      #     name: Delete all S3 buckets whose names start with 'udapeople-'
+      #     name: Delete all S3 buckets whose names start with 'udapeople-s3bucket-'
       #     command: |
-      #       OLD_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'udapeople-')].Name" --output text)
+      #       OLD_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'udapeople-s3bucket-')].Name" --output text)
       #       for bucket in ${OLD_BUCKET}
       #       do  
       #           echo deleting bucket $bucket
@@ -199,7 +199,7 @@ jobs:
           name: Create/Update frontend infrastructure via AWS CloudFormation
           command: |
             aws cloudformation deploy \
-              --stack-name udapeople-frontend \
+              --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID} \
               --template-file .circleci/files/frontend.yml \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
@@ -207,14 +207,14 @@ jobs:
           name: Create/Update backend infrastructure via AWS CloudFormation
           command: |
             aws cloudformation deploy \
-              --stack-name udapeople-backend \
+              --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID} \
               --template-file .circleci/files/backend.yml \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - run:
           name: Get and save public DNS of EC2 instance to https://memstash.io/
           command: |
-            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=backend-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
+            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=udapeople-backend-ec2-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
             echo ${PUBLIC_DNS}
             curl -H "Content-Type: text/plain" \
                -H "token: ${CIRCLE_WORKFLOW_ID}" \
@@ -285,7 +285,7 @@ jobs:
       - run: 
           name: Copy built frontend files to the S3 bucket
           command: |
-            aws s3 cp ./frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
+            aws s3 cp ./frontend/dist s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
       - destroy-aws-resource
       - slack/status
 
@@ -305,7 +305,7 @@ jobs:
       - run:
           name: Smoke test on frontend
           command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
+            URL="http://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
@@ -336,7 +336,7 @@ jobs:
           name: Create/Update CloudFront via AWS CloudFormation
           command: |
             aws cloudformation deploy \
-              --stack-name udapeople-cloudfront \
+              --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID} \
               --template-file .circleci/files/cloudfront.yml \
               --region ${AWS_DEFAULT_REGION} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
@@ -348,26 +348,31 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - run:
-          name: Remove all files at S3 bucket used for frontend
-          command: |
-            if aws s3api head-bucket --bucket udapeople-${CIRCLE_WORKFLOW_ID}
-            then
-              aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID}/ --recursive
-            fi
-      - run:
-          name: Destroy and clear stack resources (S3 bucket should be cleared first)
-          command: |
-            STACK_NAME=$(aws cloudformation list-stacks \
-              --stack-status-filter CREATE_IN_PROGRESS CREATE_COMPLETE ROLLBACK_IN_PROGRESS ROLLBACK_FAILED ROLLBACK_COMPLETE DELETE_IN_PROGRESS DELETE_FAILED UPDATE_IN_PROGRESS UPDATE_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_COMPLETE UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_FAILED UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE REVIEW_IN_PROGRESS \
-              --query "StackSummaries[*].StackName" \
-              --output text)
-            echo ${STACK_NAME}
-            for stack in ${STACK_NAME}
-            do  
-                echo deleting stack $stack
-                aws cloudformation delete-stack --stack-name $stack
-            done
+      #
+      # aws cloudformation describe-stacks --stack-name udapeople-frontend --query "Stacks[0].Outputs[?OutputKey==\`ID\`].OutputValue" --output text
+      # aws s3api list-buckets --query "Buckets[?contains(Name, 'uda')].Name" --output text
+      # aws cloudformation describe-stacks --stack-name udapeople-frontend --query "Stacks[0].Outputs[?OutputKey==\`ID\`].OutputValue" --output text
+      #
+      # - run:
+      #     name: Remove all files at S3 bucket used for frontend
+      #     command: |
+      #       if aws s3api head-bucket --bucket udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}
+      #       then
+      #         aws s3 rm s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
+      #       fi
+      # - run:
+      #     name: Destroy and clear stack resources (S3 bucket should be cleared first)
+      #     command: |
+      #       STACK_NAME=$(aws cloudformation list-stacks \
+      #         --stack-status-filter CREATE_IN_PROGRESS CREATE_COMPLETE ROLLBACK_IN_PROGRESS ROLLBACK_FAILED ROLLBACK_COMPLETE DELETE_IN_PROGRESS DELETE_FAILED UPDATE_IN_PROGRESS UPDATE_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_COMPLETE UPDATE_ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_FAILED UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS UPDATE_ROLLBACK_COMPLETE REVIEW_IN_PROGRESS \
+      #         --query "StackSummaries[*].StackName" \
+      #         --output text)
+      #       echo ${STACK_NAME}
+      #       for stack in ${STACK_NAME}
+      #       do  
+      #           echo deleting stack $stack
+      #           aws cloudformation delete-stack --stack-name $stack
+      #       done
       - slack/status
 
 workflows:

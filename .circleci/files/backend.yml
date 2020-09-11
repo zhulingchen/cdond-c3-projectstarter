@@ -46,9 +46,9 @@ Resources:
       ImageId: ami-0010d386b82bc06f0 
       Tags:
         - Key: Name
-          Value: !Sub backend-${ID}
+          Value: !Sub udapeople-backend-ec2-${ID}
 
-Outputs:
-  ID:
-    Value: !Sub "${ID}"
-    Description: CircleCI workflow ID
+# Outputs:
+#   ID:
+#     Value: !Sub "${ID}"
+#     Description: CircleCI workflow ID
