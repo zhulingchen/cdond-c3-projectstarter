@@ -448,9 +448,9 @@ workflows:
           filters:
             branches:
               only: master
-      - clean-infrastructure:
-          requires:
-            - smoke-test
-          filters:
-            branches:
-              only: master
+      # - clean-infrastructure:
+      #     requires:
+      #       - smoke-test
+      #     filters:
+      #       branches:
+      #         only: master
