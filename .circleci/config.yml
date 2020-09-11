@@ -370,30 +370,30 @@ jobs:
       - slack/status
 
 workflows:
-  frontend:
-    jobs:
-      - hello
-      - build-frontend:
-          requires:
-            - hello
-      - test-frontend:
-          requires:
-            - build-frontend
-      - analyze-frontend:
-          requires:
-            - test-frontend
-  backend:
-    jobs:
-      - hello
-      - build-backend:
-          requires:
-            - hello
-      - test-backend:
-          requires:
-            - build-backend
-      - analyze-backend:
-          requires:
-            - test-backend
+  # frontend:
+  #   jobs:
+  #     - hello
+  #     - build-frontend:
+  #         requires:
+  #           - hello
+  #     - test-frontend:
+  #         requires:
+  #           - build-frontend
+  #     - analyze-frontend:
+  #         requires:
+  #           - test-frontend
+  # backend:
+  #   jobs:
+  #     - hello
+  #     - build-backend:
+  #         requires:
+  #           - hello
+  #     - test-backend:
+  #         requires:
+  #           - build-backend
+  #     - analyze-backend:
+  #         requires:
+  #           - test-backend
   deploy:
     jobs:
       - create-infrastructure:
