@@ -333,7 +333,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Get the old CircleCI workflow ID
+          name: Promote the new deployment and delete the old one
           command: |
             OLD_CIRCLE_WORKFLOW_ID=$(aws cloudformation list-exports --query "Exports[?Name=='CircleCI-WorkflowID'].Value" --output text)
             echo OLD_CIRCLE_WORKFLOW_ID=${OLD_CIRCLE_WORKFLOW_ID}
