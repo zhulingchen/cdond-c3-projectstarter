@@ -39,7 +39,7 @@ Outputs:
     Export:
       Name: CircleCI-WorkflowID
   DomainName:
-    Value: !Sub "udapeople-s3bucket-${ID}.s3.amazonaws.com"
-    Description: URL for website hosted on S3
+    Value: !GetAtt WebpageCDN.DomainName
+    Description: CloudFront URL for website hosted on S3
     Export:
       Name: DomainName

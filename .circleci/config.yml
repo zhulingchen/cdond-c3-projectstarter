@@ -17,15 +17,15 @@ commands:
       - run:
           name: Delete the current AWS CloudFormation stacks
           command: |
-            if aws cloudformation describe-stacks --stack-name udapeople-cloudfront
+            if aws cloudformation wait stack-exists --stack-name udapeople-cloudfront
             then 
               aws cloudformation delete-stack --stack-name udapeople-cloudfront
             fi
-            if aws cloudformation describe-stacks --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
+            if aws cloudformation wait stack-exists --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
             then 
               aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
             fi
-            if aws cloudformation describe-stacks --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
+            if aws cloudformation wait stack-exists --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
             then
               aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
             fi

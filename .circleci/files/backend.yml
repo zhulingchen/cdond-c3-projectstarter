@@ -33,6 +33,9 @@ Resources:
           FromPort: 9100
           ToPort: 9100
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub udapeople-secgroup-${ID}
 
   EC2Instance:
     Type: AWS::EC2::Instance
@@ -49,8 +52,8 @@ Resources:
           Value: !Sub udapeople-backend-ec2-${ID}
 
 Outputs:
-  PublicIP:
-    Description: Server Public IP
-    Value: !GetAtt EC2Instance.PublicIp
+  PublicDnsName:
+    Description: Server Public DNS Name
+    Value: !GetAtt EC2Instance.PublicDnsName
     Export:
-      Name: PublicIP
+      Name: BackendPublicDnsName
