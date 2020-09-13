@@ -1,0 +1,37 @@
+Note:
+
+The below URLs may change or become unavailable.
+
+
+
+URL01:
+  github repository:
+    https://github.com/zhulingchen/cdond-c3-projectstarter
+
+URL02:
+  public URL for my S3 Bucket:
+    http://udapeople-s3bucket-07eed5a3-2282-4e3f-8be2-b9d516522200.s3-website.us-east-2.amazonaws.com
+  Evidence of an active and working CI/CD pipeline that is triggered when new commits are detected in the connected git repository. 
+    https://app.circleci.com/pipelines/github/zhulingchen/cdond-c3-projectstarter
+    or
+    https://github.com/zhulingchen/cdond-c3-projectstarter/blob/master/.circleci/config.yml 
+
+URL03:
+  Evidence of Ansible Playbook code that performs the tasks necessary to run the backend on the EC2 instance:
+    the playbook file is defined at:
+    https://github.com/zhulingchen/cdond-c3-projectstarter/blob/master/.circleci/ansible/deploy.yml
+    whose roles that performs the tasks necessary to run the backend on the EC2 instance are defined at:
+    https://github.com/zhulingchen/cdond-c3-projectstarter/blob/master/.circleci/ansible/roles/configure-server/tasks/main.yml
+    https://github.com/zhulingchen/cdond-c3-projectstarter/blob/master/.circleci/ansible/roles/deploy/tasks/main.yml
+
+URL04:
+  public URL for my CloudFront distribution:
+    d3a98nz3qmt1zd.cloudfront.net
+
+URL05:
+  public URL for my backend server in EC2:
+    ec2-52-15-184-119.us-east-2.compute.amazonaws.com
+
+URL06:
+  URL to my Prometheus server:
+    http://ec2-13-59-109-162.us-east-2.compute.amazonaws.com:9090
