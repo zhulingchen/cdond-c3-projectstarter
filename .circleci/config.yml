@@ -271,14 +271,11 @@ jobs:
             apk add --no-cache --update npm
             pip3 install awscli
       - run:
-          name: Get the public DNS of EC2 instance from https://memstash.io/ (frontend build needs ${API_URL})
+          name: Build the frontend
           command: |
             PUBLIC_DNS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/public_dns)
             echo ${PUBLIC_DNS}
             export API_URL="http://${PUBLIC_DNS}:3030"
-      - run:
-          name: Build the frontend
-          command: |
             echo API_URL=${API_URL}
             cd frontend
             npm install
